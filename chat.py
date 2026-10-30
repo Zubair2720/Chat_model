@@ -5,10 +5,17 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-# Load API Key
+# Load API Key from .env (Local Computer)
 load_dotenv()
 
 API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Get API Key from Streamlit Cloud Secrets
+if not API_KEY:
+    try:
+        API_KEY = st.secrets["GEMINI_API_KEY"]
+    except Exception:
+        API_KEY = None
 
 # Page Configuration
 st.set_page_config(
@@ -22,18 +29,18 @@ st.caption("Powered by Google Gemini API")
 
 # Check API Key
 if not API_KEY:
-    st.error("GEMINI_API_KEY not found in .env file")
+    st.error("GEMINI_API_KEY not found. Please configure API Key.")
     st.stop()
 
 # Gemini Client
 @st.cache_resource
-def create_client():
+def create_client(api_key):
     return genai.Client(
-        api_key=API_KEY,
+        api_key=api_key,
         http_options=types.HttpOptions(timeout=60000)
     )
 
-client = create_client()
+client = create_client(API_KEY)
 
 # Initialize Chat History
 if "messages" not in st.session_state:
